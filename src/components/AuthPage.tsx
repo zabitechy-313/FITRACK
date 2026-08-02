@@ -5,24 +5,39 @@ interface AuthPageProps {
   onLoginSuccess: (profile: Partial<UserProfile>) => void;
 }
 
+interface RegisteredUser {
+  name: string;
+  email: string;
+  passwordHash: string; // stored locally
+}
+
 export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
   const [isRegister, setIsRegister] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  // Helper to retrieve registered accounts from localStorage
+  const getRegisteredUsers = (): RegisteredUser[] => {
+    try {
+      const saved = localStorage.getItem('fintrack_registered_users');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setSuccessMsg('');
 
-    if (!email || !password) {
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail || !password) {
       setErrorMsg('Please enter both email and password.');
-      return;
-    }
-
-    if (isRegister && !name.trim()) {
-      setErrorMsg('Please enter your full name for registration.');
       return;
     }
 
@@ -31,21 +46,107 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
       return;
     }
 
-    const userName = isRegister
-      ? name.trim()
-      : email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || 'User';
+    if (isRegister) {
+      // REGISTRATION FLOW
+      if (!name.trim()) {
+        setErrorMsg('Please enter your full name for registration.');
+        return;
+      }
 
-    const initials = userName
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2) || 'US';
+      const existingUsers = getRegisteredUsers();
+      const alreadyExists = existingUsers.some((u) => u.email.toLowerCase() === cleanEmail);
+
+      if (alreadyExists) {
+        setErrorMsg('An account with this email already exists. Please sign in instead.');
+        return;
+      }
+
+      // Save new account
+      const newUser: RegisteredUser = {
+        name: name.trim(),
+        email: cleanEmail,
+        passwordHash: password,
+      };
+
+      try {
+        localStorage.setItem(
+          'fintrack_registered_users',
+          JSON.stringify([...existingUsers, newUser])
+        );
+      } catch (err) {
+        console.error('Failed to save account', err);
+      }
+
+      // Show success message and switch to Login tab
+      setSuccessMsg('Account created successfully! Please enter your password to sign in.');
+      setIsRegister(false);
+      setPassword('');
+      return;
+    }
+
+    // LOGIN FLOW
+    const registeredUsers = getRegisteredUsers();
+    const matchedUser = registeredUsers.find((u) => u.email.toLowerCase() === cleanEmail);
+
+    if (matchedUser) {
+      if (matchedUser.passwordHash !== password) {
+        setErrorMsg('Incorrect password. Please try again.');
+        return;
+      }
+
+      const initials = matchedUser.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2) || 'US';
+
+      onLoginSuccess({
+        name: matchedUser.name,
+        email: matchedUser.email,
+        initials,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      });
+      return;
+    }
+
+    // Fallback support for demo accounts if user logs in with sample email
+    if (cleanEmail === 'alex.morgan@example.com' || cleanEmail === 'sarah.chen@example.com') {
+      const demoName = cleanEmail === 'alex.morgan@example.com' ? 'Alex Morgan' : 'Sarah Chen';
+      const initials = demoName
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+
+      onLoginSuccess({
+        name: demoName,
+        email: cleanEmail,
+        initials,
+        avatar:
+          cleanEmail === 'alex.morgan@example.com'
+            ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+            : 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+      });
+      return;
+    }
+
+    // Generic account authentication for new email logins
+    const derivedName =
+      cleanEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || 'User';
+    const derivedInitials =
+      derivedName
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2) || 'US';
 
     onLoginSuccess({
-      name: userName,
-      email: email.trim().toLowerCase(),
-      initials,
+      name: derivedName,
+      email: cleanEmail,
+      initials: derivedInitials,
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     });
   };
@@ -92,6 +193,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
             onClick={() => {
               setIsRegister(false);
               setErrorMsg('');
+              setSuccessMsg('');
             }}
             className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${
               !isRegister
@@ -106,6 +208,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
             onClick={() => {
               setIsRegister(true);
               setErrorMsg('');
+              setSuccessMsg('');
             }}
             className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${
               isRegister
@@ -117,9 +220,17 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
           </button>
         </div>
 
+        {/* Success Alert */}
+        {successMsg && (
+          <div className="p-3 mb-4 rounded-xl bg-emerald-50 text-[#006c49] border border-emerald-200 text-xs font-medium flex items-center gap-2 animate-in fade-in">
+            <span className="material-symbols-outlined text-base">check_circle</span>
+            <span>{successMsg}</span>
+          </div>
+        )}
+
         {/* Error Alert */}
         {errorMsg && (
-          <div className="p-3 mb-4 rounded-xl bg-red-50 text-[#ba1a1a] border border-red-200 text-xs font-medium flex items-center gap-2">
+          <div className="p-3 mb-4 rounded-xl bg-red-50 text-[#ba1a1a] border border-red-200 text-xs font-medium flex items-center gap-2 animate-in fade-in">
             <span className="material-symbols-outlined text-base">error</span>
             <span>{errorMsg}</span>
           </div>
@@ -190,8 +301,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
             type="submit"
             className="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-[#3525cd] text-white hover:bg-[#2b1cb8] transition-all shadow-lg shadow-[#3525cd]/25 active:scale-[0.98] mt-2 flex items-center justify-center gap-2"
           >
-            <span>{isRegister ? 'Create Account & Sign In' : 'Sign In to Dashboard'}</span>
-            <span className="material-symbols-outlined text-base">arrow_forward</span>
+            <span>{isRegister ? 'Register Account' : 'Sign In to Dashboard'}</span>
+            <span className="material-symbols-outlined text-base">
+              {isRegister ? 'person_add' : 'arrow_forward'}
+            </span>
           </button>
         </form>
 
@@ -226,7 +339,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
               />
               <div>
                 <p className="text-xs font-bold text-[#0b1c30]">Alex Morgan</p>
-                <p className="text-[10px] text-[#464555]">Pro Plan • Sample Data Account</p>
+                <p className="text-[10px] text-[#464555]">Pro Plan • Sample Account</p>
               </div>
             </div>
             <span className="text-xs text-[#3525cd] font-bold group-hover:translate-x-0.5 transition-transform">
@@ -253,7 +366,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
               />
               <div>
                 <p className="text-xs font-bold text-[#0b1c30]">Sarah Chen</p>
-                <p className="text-[10px] text-[#464555]">Starter Plan • Sample Data Account</p>
+                <p className="text-[10px] text-[#464555]">Starter Plan • Sample Account</p>
               </div>
             </div>
             <span className="text-xs text-[#3525cd] font-bold group-hover:translate-x-0.5 transition-transform">
