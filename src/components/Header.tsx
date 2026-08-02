@@ -143,23 +143,24 @@ export const Header: React.FC<HeaderProps> = ({
         {isLoggedIn && user ? (
           <button
             onClick={onOpenLogin}
-            className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full hover:bg-[#eff4ff] transition-all border border-[#c7c4d8]/30"
+            className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full hover:bg-[#eff4ff] transition-all border border-[#c7c4d8]/30"
             title="Account Settings"
           >
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#3525cd] flex items-center justify-center text-white text-xs font-bold overflow-hidden relative flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[#3525cd] flex items-center justify-center text-white text-xs font-bold overflow-hidden relative flex-shrink-0">
+              <span className="uppercase text-[10px] leading-none">{user.initials}</span>
               {user.avatar ? (
                 <img
                   src={user.avatar}
                   alt={user.name}
-                  className="w-full h-full object-cover object-center rounded-full block"
+                  className="w-full h-full object-cover object-center absolute inset-0 rounded-full"
+                  referrerPolicy="no-referrer"
                   onError={(e) => {
-                    e.currentTarget.style.display = 'none';
+                    (e.currentTarget as HTMLElement).style.display = 'none';
                   }}
                 />
               ) : null}
-              <span className="uppercase text-[10px]">{user.initials}</span>
             </div>
-            <span className="text-xs font-bold text-[#0b1c30] hidden md:inline truncate max-w-[100px]">
+            <span className="text-xs font-bold text-[#0b1c30] hidden md:inline truncate max-w-[110px]">
               {user.name.split(' ')[0]}
             </span>
           </button>

@@ -95,35 +95,39 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         {/* User Account Footer Card */}
-        <div className="px-4 mt-auto pt-4 border-t border-[#c7c4d8]/20 space-y-2">
+        <div className="px-3.5 mt-auto pt-4 border-t border-[#c7c4d8]/20 space-y-2">
           {isLoggedIn ? (
-            <div className="glass-card rounded-2xl p-3 flex items-center justify-between gap-2">
+            <div className="glass-card rounded-2xl p-2.5 flex items-center justify-between gap-2 border border-[#3525cd]/15">
               <div
                 onClick={() => handleTabClick('settings')}
                 className="flex items-center gap-2.5 overflow-hidden min-w-0 cursor-pointer flex-1"
               >
-                <div className="w-9 h-9 rounded-full bg-[#3525cd] flex items-center justify-center text-white font-bold text-xs shadow-sm overflow-hidden flex-shrink-0 relative">
+                <div className="w-10 h-10 rounded-full bg-[#3525cd] flex items-center justify-center text-white font-bold text-xs shadow-sm overflow-hidden flex-shrink-0 relative">
+                  <span className="uppercase text-xs font-bold leading-none">{user.initials}</span>
                   {user.avatar ? (
                     <img
                       src={user.avatar}
                       alt={user.name}
-                      className="w-full h-full object-cover object-center rounded-full block"
+                      className="w-full h-full object-cover object-center absolute inset-0 rounded-full"
+                      referrerPolicy="no-referrer"
                       onError={(e) => {
-                        e.currentTarget.style.display = 'none';
+                        (e.currentTarget as HTMLElement).style.display = 'none';
                       }}
                     />
                   ) : null}
-                  <span className="uppercase text-xs font-bold">{user.initials}</span>
                 </div>
-                <div className="overflow-hidden min-w-0">
-                  <p className="font-bold text-xs text-[#0b1c30] truncate">{user.name}</p>
-                  <p className="text-[10px] text-[#006c49] font-bold truncate">● Logged In</p>
+                <div className="overflow-hidden min-w-0 flex flex-col justify-center">
+                  <p className="font-bold text-xs text-[#0b1c30] truncate leading-tight">{user.name}</p>
+                  <p className="text-[10px] text-[#006c49] font-bold truncate leading-tight mt-0.5 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#006c49] inline-block flex-shrink-0"></span>
+                    <span>Logged In</span>
+                  </p>
                 </div>
               </div>
 
               <button
                 onClick={onLogout}
-                className="p-1.5 rounded-lg hover:bg-red-50 text-[#ba1a1a] transition-colors"
+                className="p-2 rounded-xl hover:bg-red-50 text-[#ba1a1a] transition-colors flex-shrink-0 flex items-center justify-center"
                 title="Log Out"
               >
                 <span className="material-symbols-outlined text-lg">logout</span>
