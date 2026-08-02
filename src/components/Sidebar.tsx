@@ -106,6 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span className="uppercase text-xs font-bold leading-none">{user.initials}</span>
                   {user.avatar ? (
                     <img
+                      key={user.avatar}
                       src={user.avatar}
                       alt={user.name}
                       className="w-full h-full object-cover object-center absolute inset-0 rounded-full"

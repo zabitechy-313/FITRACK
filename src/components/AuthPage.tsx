@@ -10,6 +10,7 @@ interface RegisteredUser {
   name: string;
   email: string;
   passwordHash: string; // stored locally
+  avatar?: string;
 }
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
@@ -30,6 +31,40 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
     }
   };
 
+  // Helper to retrieve previously saved avatar for a given email address
+  const getSavedAvatarForEmail = (emailStr: string, defaultAvatar: string): string => {
+    const clean = emailStr.trim().toLowerCase();
+    try {
+      // 1. Check fintrack_profiles_by_email
+      const savedMap = localStorage.getItem('fintrack_profiles_by_email');
+      if (savedMap) {
+        const profilesMap = JSON.parse(savedMap);
+        if (profilesMap[clean]?.avatar) {
+          return profilesMap[clean].avatar;
+        }
+      }
+
+      // 2. Check fintrack_registered_users
+      const registered = getRegisteredUsers();
+      const matched = registered.find((u) => u.email.toLowerCase() === clean);
+      if (matched?.avatar) {
+        return matched.avatar;
+      }
+
+      // 3. Check current fintrack_user_profile
+      const current = localStorage.getItem('fintrack_user_profile');
+      if (current) {
+        const parsed = JSON.parse(current);
+        if (parsed.email?.toLowerCase() === clean && parsed.avatar) {
+          return parsed.avatar;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return defaultAvatar;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -47,6 +82,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
       return;
     }
 
+    const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
+
     if (isRegister) {
       // REGISTRATION FLOW
       if (!name.trim()) {
@@ -62,11 +99,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
         return;
       }
 
-      // Save new account
+      // Save new account with default avatar
       const newUser: RegisteredUser = {
         name: name.trim(),
         email: cleanEmail,
         passwordHash: password,
+        avatar: defaultAvatar,
       };
 
       try {
@@ -95,18 +133,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
         return;
       }
 
-      const initials = matchedUser.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2) || 'US';
+      const initials =
+        matchedUser.name
+          .split(' ')
+          .map((n) => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2) || 'US';
+
+      const avatar = getSavedAvatarForEmail(matchedUser.email, matchedUser.avatar || defaultAvatar);
 
       onLoginSuccess({
         name: matchedUser.name,
         email: matchedUser.email,
         initials,
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        avatar,
       });
       return;
     }
@@ -114,6 +155,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
     // Support pre-configured demo accounts
     if (cleanEmail === 'alex.morgan@example.com' || cleanEmail === 'sarah.chen@example.com') {
       const demoName = cleanEmail === 'alex.morgan@example.com' ? 'Alex Morgan' : 'Sarah Chen';
+      const fallbackImg =
+        cleanEmail === 'alex.morgan@example.com'
+          ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+          : 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80';
+
       const initials = demoName
         .split(' ')
         .map((n) => n[0])
@@ -121,14 +167,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
         .toUpperCase()
         .slice(0, 2);
 
+      const avatar = getSavedAvatarForEmail(cleanEmail, fallbackImg);
+
       onLoginSuccess({
         name: demoName,
         email: cleanEmail,
         initials,
-        avatar:
-          cleanEmail === 'alex.morgan@example.com'
-            ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
-            : 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+        avatar,
       });
       return;
     }
@@ -137,13 +182,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
     setErrorMsg('No account found with this email address. Please click "Create Account" to register first.');
   };
 
-  const handleDemoLogin = (demoName: string, demoEmail: string, avatar: string) => {
+  const handleDemoLogin = (demoName: string, demoEmail: string, fallbackAvatar: string) => {
     const initials = demoName
       .split(' ')
       .map((n) => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
+
+    const avatar = getSavedAvatarForEmail(demoEmail, fallbackAvatar);
 
     onLoginSuccess({
       name: demoName,

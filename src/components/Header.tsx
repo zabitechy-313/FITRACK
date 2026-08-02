@@ -150,6 +150,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="uppercase text-[10px] leading-none">{user.initials}</span>
               {user.avatar ? (
                 <img
+                  key={user.avatar}
                   src={user.avatar}
                   alt={user.name}
                   className="w-full h-full object-cover object-center absolute inset-0 rounded-full"

@@ -92,6 +92,34 @@ export default function App() {
   useEffect(() => {
     try {
       localStorage.setItem('fintrack_user_profile', JSON.stringify(userProfile));
+
+      // Also persist user profile in email-indexed map & registered users list
+      if (userProfile && userProfile.email) {
+        const cleanEmail = userProfile.email.trim().toLowerCase();
+
+        // 1. Save in email-indexed map
+        const savedMap = localStorage.getItem('fintrack_profiles_by_email');
+        const profilesMap = savedMap ? JSON.parse(savedMap) : {};
+        profilesMap[cleanEmail] = userProfile;
+        localStorage.setItem('fintrack_profiles_by_email', JSON.stringify(profilesMap));
+
+        // 2. Sync back to fintrack_registered_users if present
+        const savedUsers = localStorage.getItem('fintrack_registered_users');
+        if (savedUsers) {
+          const registered = JSON.parse(savedUsers);
+          const updated = registered.map((u: any) => {
+            if (u.email && u.email.trim().toLowerCase() === cleanEmail) {
+              return {
+                ...u,
+                name: userProfile.name,
+                avatar: userProfile.avatar,
+              };
+            }
+            return u;
+          });
+          localStorage.setItem('fintrack_registered_users', JSON.stringify(updated));
+        }
+      }
     } catch (e) {
       console.error('Failed to save profile to localStorage', e);
     }
@@ -107,10 +135,37 @@ export default function App() {
 
   // Auth Handlers
   const handleLoginSuccess = (profileData: Partial<UserProfile>) => {
-    setUserProfile((prev) => ({
-      ...prev,
-      ...profileData,
-    }));
+    const cleanEmail = profileData.email?.trim().toLowerCase();
+
+    // Look up existing stored profile for this email
+    let savedProfileForUser: UserProfile | null = null;
+    if (cleanEmail) {
+      try {
+        const savedMap = localStorage.getItem('fintrack_profiles_by_email');
+        if (savedMap) {
+          const profilesMap = JSON.parse(savedMap);
+          if (profilesMap[cleanEmail]) {
+            savedProfileForUser = profilesMap[cleanEmail];
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    setUserProfile((prev) => {
+      const base =
+        savedProfileForUser ||
+        (prev.email?.trim().toLowerCase() === cleanEmail ? prev : initialUserProfile);
+
+      const avatar = profileData.avatar || base.avatar || initialUserProfile.avatar;
+
+      return {
+        ...base,
+        ...profileData,
+        avatar,
+      };
+    });
     setIsLoggedIn(true);
   };
 
