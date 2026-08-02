@@ -118,7 +118,7 @@ export const Logo: React.FC<LogoProps> = ({
 
       {/* Brand Text Typography */}
       {showText && variant === 'full' && (
-        <div className="flex flex-col leading-none">
+        <div className="flex items-center leading-none">
           <div className={`${currentSize.text} font-black tracking-tight flex items-center`}>
             <span className="bg-gradient-to-r from-[#00e699] to-[#00b87c] bg-clip-text text-transparent">
               Fin
@@ -127,9 +127,6 @@ export const Logo: React.FC<LogoProps> = ({
               track
             </span>
           </div>
-          <span className={`${currentSize.tagline} font-extrabold tracking-[0.24em] text-[#6e7885] uppercase mt-1 pl-0.5`}>
-            TRACK . MANAGE . GROW .
-          </span>
         </div>
       )}
     </div>
