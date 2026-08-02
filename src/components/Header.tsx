@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TabType, UserProfile } from '../types';
+import { Logo } from './Logo';
 
 interface HeaderProps {
   activeTab: TabType;
@@ -51,6 +52,10 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <span className="material-symbols-outlined text-2xl">menu</span>
         </button>
+
+        <div className="lg:hidden flex-shrink-0 mr-1">
+          <Logo size="sm" showText={false} />
+        </div>
 
         <div className="relative w-full">
           <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#777587] text-lg sm:text-xl">

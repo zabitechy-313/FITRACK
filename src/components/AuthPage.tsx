@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
+import { Logo } from './Logo';
 
 interface AuthPageProps {
   onLoginSuccess: (profile: Partial<UserProfile>) => void;
@@ -161,12 +162,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
       {/* Main Card */}
       <div className="glass-card w-full max-w-md rounded-[32px] p-6 sm:p-10 shadow-2xl relative z-10 border border-white/80 animate-in fade-in zoom-in-95 duration-300">
         {/* Brand Logo & Header */}
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-[#3525cd] text-white flex items-center justify-center mx-auto mb-3 shadow-lg shadow-[#3525cd]/25">
-            <span className="material-symbols-outlined text-3xl">account_balance_wallet</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0b1c30] tracking-tight">FinTrack</h1>
-          <p className="text-xs font-label-caps uppercase tracking-widest text-[#464555] font-bold mt-1">
+        <div className="text-center mb-8 flex flex-col items-center">
+          <Logo size="xl" showText={true} className="mb-2" />
+          <p className="text-xs font-label-caps uppercase tracking-widest text-[#464555] font-bold">
             Personal Wealth & Budget Manager
           </p>
         </div>

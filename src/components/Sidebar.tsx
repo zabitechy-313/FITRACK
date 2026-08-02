@@ -1,5 +1,6 @@
 import React from 'react';
 import { TabType, UserProfile } from '../types';
+import { Logo } from './Logo';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -52,10 +53,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }`}
       >
         <div className="px-6 mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-[#3525cd] tracking-tight">FinTrack</h1>
-            <p className="text-[#464555] text-xs font-label-caps uppercase tracking-widest mt-0.5 font-bold">
-              Financial Wellness
+          <div className="flex flex-col">
+            <Logo size="md" showText={true} />
+            <p className="text-[#777587] text-[10px] font-label-caps uppercase tracking-widest mt-1 font-bold pl-1">
+              Personal Wealth Manager
             </p>
           </div>
           {/* Mobile Close Button */}
