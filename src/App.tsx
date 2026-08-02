@@ -10,7 +10,7 @@ import { BudgetView } from './components/BudgetView';
 import { SettingsView } from './components/SettingsView';
 import { TransactionModal } from './components/TransactionModal';
 import { BudgetModal } from './components/BudgetModal';
-import { LoginModal } from './components/LoginModal';
+import { AuthPage } from './components/AuthPage';
 import { TabType, Transaction, BudgetCategoryItem, UserProfile } from './types';
 import {
   initialTransactions,
@@ -24,32 +24,30 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Authentication State
+  // Authentication State - Defaults to false on first visit so Login Page appears first
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem('fintrack_is_logged_in');
-      return saved !== null ? JSON.parse(saved) : true;
+      return saved !== null ? JSON.parse(saved) : false;
     } catch {
-      return true;
+      return false;
     }
   });
 
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
-
-  // Persistent States from localStorage
+  // Transactions State - Defaults to empty array for clean Financial Insights
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     try {
       const saved = localStorage.getItem('fintrack_transactions');
-      return saved ? JSON.parse(saved) : initialTransactions;
+      return saved !== null ? JSON.parse(saved) : [];
     } catch {
-      return initialTransactions;
+      return [];
     }
   });
 
   const [budgetCategories, setBudgetCategories] = useState<BudgetCategoryItem[]>(() => {
     try {
       const saved = localStorage.getItem('fintrack_budgets');
-      return saved ? JSON.parse(saved) : initialBudgetCategories;
+      return saved !== null ? JSON.parse(saved) : initialBudgetCategories;
     } catch {
       return initialBudgetCategories;
     }
@@ -119,6 +117,7 @@ export default function App() {
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out?')) {
       setIsLoggedIn(false);
+      localStorage.setItem('fintrack_is_logged_in', JSON.stringify(false));
     }
   };
 
@@ -194,6 +193,11 @@ export default function App() {
     }
   };
 
+  // IF NOT LOGGED IN -> Show Full Screen Login / Registration Page First
+  if (!isLoggedIn) {
+    return <AuthPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
   const currentCurrency = userProfile.currency || 'USD';
   const currencyObj = getCurrencyByCode(currentCurrency);
 
@@ -207,7 +211,7 @@ export default function App() {
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         isLoggedIn={isLoggedIn}
-        onOpenLogin={() => setIsLoginModalOpen(true)}
+        onOpenLogin={() => setIsLoggedIn(false)}
         onLogout={handleLogout}
       />
 
@@ -225,7 +229,7 @@ export default function App() {
           }
         }}
         isLoggedIn={isLoggedIn}
-        onOpenLogin={() => setIsLoginModalOpen(true)}
+        onOpenLogin={() => setIsLoggedIn(false)}
         user={userProfile}
       />
 
@@ -281,7 +285,7 @@ export default function App() {
                 onResetData={handleResetData}
                 transactionCount={transactions.length}
                 isLoggedIn={isLoggedIn}
-                onOpenLogin={() => setIsLoginModalOpen(true)}
+                onOpenLogin={() => setIsLoggedIn(false)}
                 onLogout={handleLogout}
               />
             )}
@@ -308,12 +312,6 @@ export default function App() {
         onSaveBudget={handleSaveBudget}
         initialData={editingBudgetCategory}
         currencySymbol={currencyObj.symbol}
-      />
-
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onLoginSuccess={handleLoginSuccess}
       />
     </div>
   );
