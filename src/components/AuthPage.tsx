@@ -57,7 +57,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
       const alreadyExists = existingUsers.some((u) => u.email.toLowerCase() === cleanEmail);
 
       if (alreadyExists) {
-        setErrorMsg('An account with this email already exists. Please sign in instead.');
+        setErrorMsg('An account with this email already exists. Please switch to Sign In.');
         return;
       }
 
@@ -77,14 +77,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
         console.error('Failed to save account', err);
       }
 
-      // Show success message and switch to Login tab
-      setSuccessMsg('Account created successfully! Please enter your password to sign in.');
+      // Show success message and switch to Sign In tab with prefilled email
+      setSuccessMsg('Account registered successfully! Please enter your password to sign in.');
       setIsRegister(false);
       setPassword('');
       return;
     }
 
-    // LOGIN FLOW
+    // LOGIN FLOW - Strictly require account registration
     const registeredUsers = getRegisteredUsers();
     const matchedUser = registeredUsers.find((u) => u.email.toLowerCase() === cleanEmail);
 
@@ -110,7 +110,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
       return;
     }
 
-    // Fallback support for demo accounts if user logs in with sample email
+    // Support pre-configured demo accounts
     if (cleanEmail === 'alex.morgan@example.com' || cleanEmail === 'sarah.chen@example.com') {
       const demoName = cleanEmail === 'alex.morgan@example.com' ? 'Alex Morgan' : 'Sarah Chen';
       const initials = demoName
@@ -132,23 +132,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
       return;
     }
 
-    // Generic account authentication for new email logins
-    const derivedName =
-      cleanEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || 'User';
-    const derivedInitials =
-      derivedName
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2) || 'US';
-
-    onLoginSuccess({
-      name: derivedName,
-      email: cleanEmail,
-      initials: derivedInitials,
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    });
+    // Unregistered account attempt -> Block login and instruct user to register first
+    setErrorMsg('No account found with this email address. Please click "Create Account" to register first.');
   };
 
   const handleDemoLogin = (demoName: string, demoEmail: string, avatar: string) => {
