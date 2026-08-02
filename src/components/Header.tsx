@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TabType } from '../types';
+import { TabType, UserProfile } from '../types';
 
 interface HeaderProps {
   activeTab: TabType;
@@ -8,6 +8,9 @@ interface HeaderProps {
   onOpenAddModal: () => void;
   onToggleMobileMenu?: () => void;
   unreadNotificationsCount?: number;
+  isLoggedIn?: boolean;
+  onOpenLogin?: () => void;
+  user?: UserProfile;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,7 +19,10 @@ export const Header: React.FC<HeaderProps> = ({
   setSearchQuery,
   onOpenAddModal,
   onToggleMobileMenu,
-  unreadNotificationsCount = 2,
+  unreadNotificationsCount = 1,
+  isLoggedIn = false,
+  onOpenLogin,
+  user,
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -113,20 +119,12 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               </div>
               <div className="space-y-3">
-                <div className="p-2.5 rounded-xl bg-[#ffdad6]/40 border border-[#ba1a1a]/20 flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#ba1a1a] text-lg mt-0.5">warning</span>
-                  <div>
-                    <p className="text-xs font-bold text-[#0b1c30]">Shopping Budget Exceeded</p>
-                    <p className="text-[11px] text-[#464555]">You spent $1,050 ($50 over limit)</p>
-                    <span className="text-[10px] text-[#777587] mt-1 block">10 mins ago</span>
-                  </div>
-                </div>
                 <div className="p-2.5 rounded-xl bg-[#e5eeff] border border-[#3525cd]/20 flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#3525cd] text-lg mt-0.5">payments</span>
+                  <span className="material-symbols-outlined text-[#3525cd] text-lg mt-0.5">verified_user</span>
                   <div>
-                    <p className="text-xs font-bold text-[#0b1c30]">Income Received</p>
-                    <p className="text-[11px] text-[#464555]">+$4,500.00 from Acme Corp</p>
-                    <span className="text-[10px] text-[#777587] mt-1 block">2 hours ago</span>
+                    <p className="text-xs font-bold text-[#0b1c30]">FinTrack System Ready</p>
+                    <p className="text-[11px] text-[#464555]">Your local budget dashboard is fully synced.</p>
+                    <span className="text-[10px] text-[#777587] mt-1 block">Just now</span>
                   </div>
                 </div>
               </div>
@@ -136,44 +134,39 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="h-5 sm:h-6 w-[1px] bg-[#c7c4d8]/40 hidden sm:block" />
 
-        {/* Help Center Button */}
-        <div className="relative hidden sm:block">
+        {/* Login / Profile Header Button */}
+        {isLoggedIn && user ? (
           <button
-            onClick={() => {
-              setShowHelp(!showHelp);
-              setShowNotifications(false);
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-[#eff4ff] text-[#0b1c30] text-sm font-semibold transition-all"
+            onClick={onOpenLogin}
+            className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full hover:bg-[#eff4ff] transition-all border border-[#c7c4d8]/30"
+            title="Account Settings"
           >
-            <span>Help</span>
-            <span className="material-symbols-outlined text-base text-[#464555]">help</span>
-          </button>
-
-          {showHelp && (
-            <div className="absolute right-0 mt-2 w-72 glass-card rounded-2xl p-4 shadow-xl border border-[#c7c4d8]/40 z-50">
-              <h4 className="font-bold text-sm text-[#0b1c30] mb-2">FinTrack Assistant</h4>
-              <p className="text-xs text-[#464555] mb-3">
-                Need help categorizing transactions or setting up automatic monthly budgets?
-              </p>
-              <div className="space-y-1.5">
-                <a
-                  href="#faq"
-                  onClick={(e) => { e.preventDefault(); alert('Connecting to FinTrack Support Chat...'); }}
-                  className="block text-xs text-[#3525cd] font-semibold hover:underline"
-                >
-                  • How do I export CSV reports?
-                </a>
-                <a
-                  href="#faq"
-                  onClick={(e) => { e.preventDefault(); alert('Budget alert threshold is set at 80% and 95% by default.'); }}
-                  className="block text-xs text-[#3525cd] font-semibold hover:underline"
-                >
-                  • How budget alerts work
-                </a>
-              </div>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#3525cd] flex items-center justify-center text-white text-xs font-bold overflow-hidden relative flex-shrink-0">
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="w-full h-full object-cover object-center rounded-full block"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              ) : null}
+              <span className="uppercase text-[10px]">{user.initials}</span>
             </div>
-          )}
-        </div>
+            <span className="text-xs font-bold text-[#0b1c30] hidden md:inline truncate max-w-[100px]">
+              {user.name.split(' ')[0]}
+            </span>
+          </button>
+        ) : (
+          <button
+            onClick={onOpenLogin}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#3525cd]/10 text-[#3525cd] hover:bg-[#3525cd]/20 font-bold text-xs transition-all"
+          >
+            <span className="material-symbols-outlined text-base">login</span>
+            <span>Log In</span>
+          </button>
+        )}
       </div>
     </header>
   );

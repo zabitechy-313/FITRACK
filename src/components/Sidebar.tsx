@@ -7,6 +7,9 @@ interface SidebarProps {
   user: UserProfile;
   isOpen?: boolean;
   onClose?: () => void;
+  isLoggedIn?: boolean;
+  onOpenLogin?: () => void;
+  onLogout?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -15,6 +18,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   user,
   isOpen = false,
   onClose,
+  isLoggedIn = false,
+  onOpenLogin,
+  onLogout,
 }) => {
   const navItems: { id: TabType; label: string; icon: string }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
@@ -48,7 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="px-6 mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-[#3525cd] tracking-tight">FinTrack</h1>
-            <p className="text-[#464555] text-xs font-label-caps uppercase tracking-widest mt-0.5">
+            <p className="text-[#464555] text-xs font-label-caps uppercase tracking-widest mt-0.5 font-bold">
               Financial Wellness
             </p>
           </div>
@@ -87,30 +93,50 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </nav>
 
-        <div className="px-4 mt-auto pt-4 border-t border-[#c7c4d8]/20">
-          <div
-            onClick={() => handleTabClick('settings')}
-            className="glass-card rounded-2xl p-3.5 flex items-center gap-3 hover:bg-white/80 transition-all cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-full bg-[#3525cd] flex items-center justify-center text-white font-bold text-xs shadow-sm overflow-hidden flex-shrink-0 relative">
-              {user.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="w-full h-full object-cover object-center rounded-full block"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              ) : (
-                <span className="uppercase text-xs font-bold">{user.initials}</span>
-              )}
+        {/* User Account Footer Card */}
+        <div className="px-4 mt-auto pt-4 border-t border-[#c7c4d8]/20 space-y-2">
+          {isLoggedIn ? (
+            <div className="glass-card rounded-2xl p-3 flex items-center justify-between gap-2">
+              <div
+                onClick={() => handleTabClick('settings')}
+                className="flex items-center gap-2.5 overflow-hidden min-w-0 cursor-pointer flex-1"
+              >
+                <div className="w-9 h-9 rounded-full bg-[#3525cd] flex items-center justify-center text-white font-bold text-xs shadow-sm overflow-hidden flex-shrink-0 relative">
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="w-full h-full object-cover object-center rounded-full block"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : null}
+                  <span className="uppercase text-xs font-bold">{user.initials}</span>
+                </div>
+                <div className="overflow-hidden min-w-0">
+                  <p className="font-bold text-xs text-[#0b1c30] truncate">{user.name}</p>
+                  <p className="text-[10px] text-[#006c49] font-bold truncate">● Logged In</p>
+                </div>
+              </div>
+
+              <button
+                onClick={onLogout}
+                className="p-1.5 rounded-lg hover:bg-red-50 text-[#ba1a1a] transition-colors"
+                title="Log Out"
+              >
+                <span className="material-symbols-outlined text-lg">logout</span>
+              </button>
             </div>
-            <div className="overflow-hidden min-w-0">
-              <p className="font-bold text-sm text-[#0b1c30] truncate">{user.name}</p>
-              <p className="text-xs text-[#464555] truncate">{user.plan}</p>
-            </div>
-          </div>
+          ) : (
+            <button
+              onClick={onOpenLogin}
+              className="w-full py-2.5 px-4 rounded-2xl bg-[#3525cd] text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#2b1cb8] transition-all shadow-md shadow-[#3525cd]/20"
+            >
+              <span className="material-symbols-outlined text-base">login</span>
+              <span>Log In / Sign Up</span>
+            </button>
+          )}
         </div>
       </aside>
     </>

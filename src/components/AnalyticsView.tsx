@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   BarChart,
   Bar,
@@ -6,29 +6,101 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  AreaChart,
-  Area,
   PieChart,
   Pie,
   Cell,
 } from 'recharts';
-import {
-  monthlyIncomeVsExpenseData,
-  weeklySpendingTrend,
-  categoryDistribution,
-} from '../data/mockData';
+import { Transaction } from '../types';
 import { formatMoney } from '../data/currencies';
 
 interface AnalyticsViewProps {
+  transactions?: Transaction[];
   currency?: string;
 }
 
-export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ currency = 'USD' }) => {
+const CATEGORY_COLORS = [
+  '#3525cd',
+  '#006c49',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
+  '#06b6d4',
+  '#ec4899',
+  '#64748b',
+];
+
+export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
+  transactions = [],
+  currency = 'USD',
+}) => {
   const [period, setPeriod] = useState<'Week' | 'Month' | 'Year'>('Month');
 
+  // Compute live dynamic stats from transactions
+  const {
+    totalIncome,
+    totalExpenses,
+    netSavings,
+    categoryBreakdown,
+    topExpenseCategory,
+    topExpenseAmount,
+  } = useMemo(() => {
+    let income = 0;
+    let expenses = 0;
+    const catMap: Record<string, number> = {};
+
+    transactions.forEach((tx) => {
+      if (tx.type === 'income') {
+        income += Math.abs(tx.amount);
+      } else {
+        const amt = Math.abs(tx.amount);
+        expenses += amt;
+        catMap[tx.category] = (catMap[tx.category] || 0) + amt;
+      }
+    });
+
+    const breakdown = Object.entries(catMap)
+      .map(([name, value], idx) => ({
+        name,
+        value,
+        color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    const topCat = breakdown[0]?.name || 'No expenses';
+    const topAmt = breakdown[0]?.value || 0;
+
+    return {
+      totalIncome: income,
+      totalExpenses: expenses,
+      netSavings: income - expenses,
+      categoryBreakdown: breakdown,
+      topExpenseCategory: topCat,
+      topExpenseAmount: topAmt,
+    };
+  }, [transactions]);
+
+  // Monthly breakdown chart data generated from transactions or fallback to baseline
+  const chartData = useMemo(() => {
+    if (transactions.length === 0) {
+      return [
+        { name: 'Jan', income: 0, expense: 0 },
+        { name: 'Feb', income: 0, expense: 0 },
+        { name: 'Mar', income: 0, expense: 0 },
+        { name: 'Apr', income: 0, expense: 0 },
+      ];
+    }
+
+    // Basic aggregation or display
+    return [
+      { name: 'Current Cycle', income: totalIncome, expense: totalExpenses },
+    ];
+  }, [transactions, totalIncome, totalExpenses]);
+
   const handleExportReport = () => {
-    alert('Generating & downloading FinTrack Monthly Financial Report (PDF)...');
+    alert('Generating & downloading FinTrack Financial Report (PDF)...');
   };
+
+  const hasData = transactions.length > 0;
 
   return (
     <div className="space-y-8 max-w-[1200px] mx-auto animate-in fade-in duration-300">
@@ -37,7 +109,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ currency = 'USD' }
         <div>
           <h2 className="text-2xl font-bold text-[#0b1c30]">Financial Insights</h2>
           <p className="text-[#464555] text-sm mt-1">
-            Your spending habits and performance for the selected period.
+            Real-time analytics computed directly from your transaction history.
           </p>
         </div>
 
@@ -68,275 +140,199 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ currency = 'USD' }
         </div>
       </div>
 
-      {/* Insights Bento Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Key Insight Card 1 */}
-        <div className="glass-card rounded-2xl p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="p-2.5 bg-[#6cf8bb]/30 text-[#006c49] rounded-xl">
-                <span className="material-symbols-outlined text-xl">trending_down</span>
-              </span>
-              <span className="text-xs font-label-caps text-[#006c49] font-bold">
-                +2.4% vs last mo.
-              </span>
+      {!hasData && (
+        <div className="glass-card p-6 rounded-3xl border border-[#3525cd]/20 bg-[#eff4ff]/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#3525cd]/10 text-[#3525cd] flex items-center justify-center font-bold flex-shrink-0">
+              <span className="material-symbols-outlined text-2xl">analytics</span>
             </div>
-            <h3 className="text-[#464555] text-xs uppercase font-label-caps mb-1">
-              Food & Dining
-            </h3>
-            <div className="flex items-baseline gap-2">
-              <span className="font-numeric text-3xl font-bold text-[#0b1c30]">{formatMoney(1240, currency)}</span>
-              <span className="text-[#006c49] text-xs font-bold">15% Less</span>
+            <div>
+              <h4 className="font-bold text-[#0b1c30] text-base">New User Insights Active</h4>
+              <p className="text-xs text-[#464555] mt-0.5">
+                All metrics are clear and ready. Add transactions to generate dynamic category charts and monthly variance trends!
+              </p>
             </div>
           </div>
-          <p className="text-xs text-[#464555] mt-4 leading-relaxed">
-            Great job! You stayed under your {formatMoney(1400, currency)} food budget this month.
-          </p>
         </div>
+      )}
 
-        {/* Key Insight Card 2 */}
+      {/* Insights Bento Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Key Insight Card 1: Total Expenses / Top Category */}
         <div className="glass-card rounded-2xl p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform">
           <div>
             <div className="flex items-center justify-between mb-4">
               <span className="p-2.5 bg-amber-100 text-amber-700 rounded-xl">
-                <span className="material-symbols-outlined text-xl">warning</span>
+                <span className="material-symbols-outlined text-xl">payments</span>
               </span>
               <span className="text-xs font-label-caps text-amber-700 font-bold">
-                Limit Reached
+                Total Expenses
               </span>
             </div>
-            <h3 className="text-[#464555] text-xs uppercase font-label-caps mb-1">Shopping</h3>
+            <h3 className="text-[#464555] text-xs uppercase font-label-caps mb-1 font-bold">
+              Total Spending
+            </h3>
             <div className="flex items-baseline gap-2">
-              <span className="font-numeric text-3xl font-bold text-[#0b1c30]">{formatMoney(890, currency)}</span>
-              <span className="text-amber-700 text-xs font-bold">8% More</span>
+              <span className="font-numeric text-3xl font-bold text-[#0b1c30]">
+                {formatMoney(totalExpenses, currency)}
+              </span>
             </div>
           </div>
-          <div>
-            <div className="w-full bg-[#eff4ff] h-2 rounded-full mt-4 overflow-hidden">
-              <div className="bg-amber-500 h-full w-[95%] rounded-full" />
-            </div>
-            <p className="text-xs text-[#464555] mt-2">
-              You have {formatMoney(50, currency)} remaining in your shopping category.
-            </p>
-          </div>
+          <p className="text-xs text-[#464555] mt-4 leading-relaxed">
+            {hasData
+              ? `Highest spend category: ${topExpenseCategory} (${formatMoney(topExpenseAmount, currency)}).`
+              : 'No expenses recorded yet.'}
+          </p>
         </div>
 
-        {/* Key Insight Card 3 */}
+        {/* Key Insight Card 2: Total Income */}
+        <div className="glass-card rounded-2xl p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <span className="p-2.5 bg-[#6cf8bb]/30 text-[#006c49] rounded-xl">
+                <span className="material-symbols-outlined text-xl">trending_up</span>
+              </span>
+              <span className="text-xs font-label-caps text-[#006c49] font-bold">
+                Total Income
+              </span>
+            </div>
+            <h3 className="text-[#464555] text-xs uppercase font-label-caps mb-1 font-bold">
+              Total Revenue
+            </h3>
+            <div className="flex items-baseline gap-2">
+              <span className="font-numeric text-3xl font-bold text-[#0b1c30]">
+                {formatMoney(totalIncome, currency)}
+              </span>
+            </div>
+          </div>
+          <p className="text-xs text-[#464555] mt-4 leading-relaxed">
+            {hasData
+              ? `${transactions.filter((t) => t.type === 'income').length} income deposits logged.`
+              : 'No income logged yet.'}
+          </p>
+        </div>
+
+        {/* Key Insight Card 3: Net Cashflow / Savings */}
         <div className="glass-card rounded-2xl p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform">
           <div>
             <div className="flex items-center justify-between mb-4">
               <span className="p-2.5 bg-[#3525cd]/10 text-[#3525cd] rounded-xl">
-                <span className="material-symbols-outlined text-xl">savings</span>
+                <span className="material-symbols-outlined text-xl">account_balance</span>
               </span>
               <span className="text-xs font-label-caps text-[#3525cd] font-bold">
-                Projected
+                Net Cashflow
               </span>
             </div>
-            <h3 className="text-[#464555] text-xs uppercase font-label-caps mb-1">
-              Net Savings
+            <h3 className="text-[#464555] text-xs uppercase font-label-caps mb-1 font-bold">
+              Net Balance
             </h3>
             <div className="flex items-baseline gap-2">
-              <span className="font-numeric text-3xl font-bold text-[#0b1c30]">{formatMoney(3150, currency)}</span>
-              <span className="text-[#3525cd] text-xs font-bold">+12% Target</span>
+              <span
+                className={`font-numeric text-3xl font-bold ${
+                  netSavings >= 0 ? 'text-[#006c49]' : 'text-[#ba1a1a]'
+                }`}
+              >
+                {formatMoney(netSavings, currency)}
+              </span>
             </div>
           </div>
           <p className="text-xs text-[#464555] mt-4 leading-relaxed">
-            On track to save $37k by year end. Your highest savings month so far.
+            {netSavings >= 0
+              ? 'Positive net income flow for this period.'
+              : 'Spending exceeds income. Review your expenses.'}
           </p>
         </div>
       </div>
 
       {/* Charts Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Income vs Expenses Comparison */}
-        <div className="glass-card rounded-3xl p-6 md:p-8 col-span-1 lg:col-span-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
+        {/* Income vs Expenses Bar Chart */}
+        <div className="glass-card rounded-3xl p-6 md:p-8">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-xl font-bold text-[#0b1c30]">Income vs Expenses</h3>
-              <p className="text-xs text-[#464555]">Historical monthly net variance</p>
-            </div>
-            <div className="flex gap-4 items-center">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-[#3525cd]" />
-                <span className="text-xs font-medium text-[#464555]">Income</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-[#006c49]" />
-                <span className="text-xs font-medium text-[#464555]">Expenses</span>
-              </div>
+              <h3 className="text-xl font-bold text-[#0b1c30]">Cash Flow Analysis</h3>
+              <p className="text-xs text-[#464555]">Comparison of total income vs expenses</p>
             </div>
           </div>
 
-          <div className="h-72 w-full">
+          <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyIncomeVsExpenseData} barGap={6}>
-                <XAxis dataKey="month" stroke="#777587" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#777587" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} />
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#464555' }} />
+                <YAxis tick={{ fontSize: 12, fill: '#464555' }} />
                 <Tooltip
-                  formatter={(value: any) => [`$${value.toLocaleString()}`, '']}
+                  formatter={(val: number) => [formatMoney(val, currency), '']}
                   contentStyle={{
-                    backgroundColor: '#0b1c30',
-                    color: '#fff',
+                    backgroundColor: '#ffffff',
                     borderRadius: '12px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                     border: 'none',
-                    fontSize: '12px',
                   }}
                 />
-                <Bar dataKey="income" fill="#3525cd" radius={[6, 6, 0, 0]} name="Income" />
-                <Bar dataKey="expense" fill="#006c49" radius={[6, 6, 0, 0]} name="Expenses" />
+                <Bar dataKey="income" name="Income" fill="#006c49" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="expense" name="Expenses" fill="#3525cd" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Spending Trends Area Chart */}
+        {/* Category Breakdown Pie Chart */}
         <div className="glass-card rounded-3xl p-6 md:p-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-xl font-bold text-[#0b1c30]">Spending Trend</h3>
-              <p className="text-xs text-[#464555]">Daily cadence for current week</p>
+              <h3 className="text-xl font-bold text-[#0b1c30]">Expense Breakdown</h3>
+              <p className="text-xs text-[#464555]">Distribution across spending categories</p>
             </div>
-            <button className="text-[#464555] hover:text-[#3525cd]">
-              <span className="material-symbols-outlined">more_horiz</span>
-            </button>
           </div>
 
-          <div className="h-60 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={weeklySpendingTrend}>
-                <defs>
-                  <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3525cd" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3525cd" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="day" stroke="#777587" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis hide />
-                <Tooltip
-                  formatter={(value: any) => [`$${value}`, 'Spending']}
-                  contentStyle={{
-                    backgroundColor: '#0b1c30',
-                    color: '#fff',
-                    borderRadius: '12px',
-                    border: 'none',
-                    fontSize: '12px',
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="#3525cd"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorAmount)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          {categoryBreakdown.length > 0 ? (
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <div className="h-56 w-56 flex-shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryBreakdown}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={3}
+                    >
+                      {categoryBreakdown.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(val: number) => [formatMoney(val, currency), 'Total']} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
-        {/* Expenses by Category Donut Chart */}
-        <div className="glass-card rounded-3xl p-6 md:p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-[#0b1c30]">Category Distribution</h3>
-            <button className="flex items-center gap-1 text-xs font-bold text-[#3525cd] hover:underline">
-              <span>Details</span>
-              <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </button>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-6">
-            <div className="w-44 h-44 relative flex-shrink-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryDistribution}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={75}
-                    paddingAngle={3}
-                    dataKey="value"
-                  >
-                    {categoryDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(val: any) => [`${val}%`, 'Allocation']}
-                    contentStyle={{
-                      backgroundColor: '#0b1c30',
-                      color: '#fff',
-                      borderRadius: '12px',
-                      border: 'none',
-                      fontSize: '12px',
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="flex-grow space-y-3 w-full">
-              {categoryDistribution.map((cat) => (
-                <div key={cat.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: cat.color }}
-                    />
-                    <span className="text-sm font-medium text-[#0b1c30]">{cat.name}</span>
+              <div className="space-y-2.5 w-full">
+                {categoryBreakdown.map((cat) => (
+                  <div key={cat.name} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: cat.color }}
+                      />
+                      <span className="font-semibold text-[#0b1c30] truncate">{cat.name}</span>
+                    </div>
+                    <span className="font-numeric font-bold text-[#0b1c30]">
+                      {formatMoney(cat.value, currency)}
+                    </span>
                   </div>
-                  <span className="font-numeric text-sm font-bold text-[#0b1c30]">
-                    {cat.value}%
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity Mini Section */}
-      <div className="mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-[#0b1c30]">Unusual Activity</h3>
-          <span className="text-xs uppercase font-label-caps text-[#464555]">
-            Last 7 Days
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="glass-card rounded-2xl p-4 flex items-center gap-4 hover:border-[#3525cd]/40 transition-colors cursor-pointer group">
-            <div className="w-12 h-12 bg-[#ba1a1a]/10 text-[#ba1a1a] rounded-xl flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-xl">shopping_bag</span>
+          ) : (
+            <div className="h-56 flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-[#c7c4d8]/40 rounded-2xl">
+              <span className="material-symbols-outlined text-3xl text-[#777587] mb-2">pie_chart</span>
+              <p className="font-bold text-sm text-[#0b1c30]">No expenses recorded</p>
+              <p className="text-xs text-[#464555] mt-1">Add expense transactions to view category distribution.</p>
             </div>
-            <div className="flex-grow min-w-0">
-              <p className="font-bold text-[#0b1c30] truncate">Electronics Store</p>
-              <p className="text-xs text-[#464555]">24 Apr • Out of category spike</p>
-            </div>
-            <div className="text-right flex items-center gap-2">
-              <p className="font-numeric font-bold text-[#ba1a1a]">-$450.00</p>
-              <span className="material-symbols-outlined text-[#464555] group-hover:translate-x-1 transition-transform">
-                chevron_right
-              </span>
-            </div>
-          </div>
-
-          <div className="glass-card rounded-2xl p-4 flex items-center gap-4 hover:border-[#3525cd]/40 transition-colors cursor-pointer group">
-            <div className="w-12 h-12 bg-[#006c49]/10 text-[#006c49] rounded-xl flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-xl">payments</span>
-            </div>
-            <div className="flex-grow min-w-0">
-              <p className="font-bold text-[#0b1c30] truncate">Annual Tax Refund</p>
-              <p className="text-xs text-[#464555]">22 Apr • Unusual income bonus</p>
-            </div>
-            <div className="text-right flex items-center gap-2">
-              <p className="font-numeric font-bold text-[#006c49]">+$1,200.00</p>
-              <span className="material-symbols-outlined text-[#464555] group-hover:translate-x-1 transition-transform">
-                chevron_right
-              </span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,22 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BudgetCategoryItem, TransactionCategory } from '../types';
 
 interface BudgetModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddBudget: (category: BudgetCategoryItem) => void;
+  onSaveBudget: (category: BudgetCategoryItem) => void;
+  initialData?: BudgetCategoryItem | null;
   currencySymbol?: string;
 }
 
 export const BudgetModal: React.FC<BudgetModalProps> = ({
   isOpen,
   onClose,
-  onAddBudget,
+  onSaveBudget,
+  initialData,
   currencySymbol = '$',
 }) => {
-  const [name, setName] = useState('Travel & Vacations');
+  const [name, setName] = useState('Groceries & Dining');
   const [amount, setAmount] = useState('800');
+  const [spent, setSpent] = useState('0');
   const [enableAlert, setEnableAlert] = useState(true);
+
+  useEffect(() => {
+    if (initialData) {
+      setName(initialData.name);
+      setAmount(initialData.allocated.toString());
+      setSpent((initialData.spent || 0).toString());
+    } else {
+      setName('Groceries & Dining');
+      setAmount('800');
+      setSpent('0');
+    }
+  }, [initialData, isOpen]);
 
   if (!isOpen) return null;
 
@@ -24,19 +39,21 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
     e.preventDefault();
     if (!name || !amount) return;
 
-    const allocated = parseFloat(amount);
-    const newCategory: BudgetCategoryItem = {
-      id: `bgt-${Date.now()}`,
+    const allocated = parseFloat(amount) || 0;
+    const spentAmount = parseFloat(spent) || 0;
+
+    const budgetItem: BudgetCategoryItem = {
+      id: initialData ? initialData.id : `bgt-${Date.now()}`,
       name,
       category: 'Other' as TransactionCategory,
       allocated,
-      spent: 0,
-      icon: 'flight_takeoff',
-      color: '#3525cd',
-      containerBg: 'bg-indigo-100',
+      spent: spentAmount,
+      icon: initialData?.icon || 'payments',
+      color: initialData?.color || '#3525cd',
+      containerBg: initialData?.containerBg || 'bg-indigo-100',
     };
 
-    onAddBudget(newCategory);
+    onSaveBudget(budgetItem);
     onClose();
   };
 
@@ -49,9 +66,11 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
       <div className="glass-card w-full max-w-lg rounded-[32px] p-6 md:p-8 shadow-2xl relative z-10 border border-white/40 animate-in zoom-in-95 duration-200">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h3 className="text-xl font-bold text-[#0b1c30]">Set New Budget</h3>
+            <h3 className="text-xl font-bold text-[#0b1c30]">
+              {initialData ? 'Edit Budget Category' : 'Set New Budget'}
+            </h3>
             <p className="text-xs text-[#464555] mt-0.5">
-              Define limits for a new spending category.
+              Define spending limits and track current spending.
             </p>
           </div>
           <button
@@ -64,39 +83,57 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-xs font-label-caps text-[#464555] uppercase mb-1.5">
+            <label className="block text-xs font-label-caps text-[#464555] uppercase mb-1.5 font-bold">
               Category Name
             </label>
-            <select
+            <input
+              type="text"
+              required
+              placeholder="e.g. Groceries, Travel, Entertainment"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-[#eff4ff] border-none rounded-xl py-3 px-4 text-sm text-[#0b1c30] focus:ring-2 focus:ring-[#3525cd]/20 cursor-pointer outline-none"
-            >
-              <option value="Travel & Vacations">Travel & Vacations</option>
-              <option value="Healthcare & Wellness">Healthcare & Wellness</option>
-              <option value="Groceries & Household">Groceries & Household</option>
-              <option value="Utilities & Subscriptions">Utilities & Subscriptions</option>
-              <option value="Custom Category">Custom Category</option>
-            </select>
+              className="w-full bg-[#eff4ff] border-none rounded-xl py-3 px-4 text-sm text-[#0b1c30] focus:ring-2 focus:ring-[#3525cd]/20 outline-none"
+            />
           </div>
 
-          <div>
-            <label className="block text-xs font-label-caps text-[#464555] uppercase mb-1.5">
-              Monthly Allowance ({currencySymbol})
-            </label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-[#464555] text-sm">
-                {currencySymbol}
-              </span>
-              <input
-                type="number"
-                step="10"
-                required
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full pl-8 pr-4 py-3 bg-[#eff4ff] border-none rounded-xl focus:ring-2 focus:ring-[#3525cd]/20 text-sm font-numeric text-[#0b1c30] outline-none"
-              />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-label-caps text-[#464555] uppercase mb-1.5 font-bold">
+                Monthly Limit ({currencySymbol})
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-[#464555] text-sm">
+                  {currencySymbol}
+                </span>
+                <input
+                  type="number"
+                  step="any"
+                  required
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full pl-8 pr-4 py-3 bg-[#eff4ff] border-none rounded-xl focus:ring-2 focus:ring-[#3525cd]/20 text-sm font-numeric text-[#0b1c30] outline-none font-bold"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-label-caps text-[#464555] uppercase mb-1.5 font-bold">
+                Amount Spent So Far ({currencySymbol})
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-[#464555] text-sm">
+                  {currencySymbol}
+                </span>
+                <input
+                  type="number"
+                  step="any"
+                  placeholder="0.00"
+                  value={spent}
+                  onChange={(e) => setSpent(e.target.value)}
+                  className="w-full pl-8 pr-4 py-3 bg-[#eff4ff] border-none rounded-xl focus:ring-2 focus:ring-[#3525cd]/20 text-sm font-numeric text-[#0b1c30] outline-none font-bold text-[#3525cd]"
+                />
+              </div>
             </div>
           </div>
 
@@ -123,9 +160,9 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
             </button>
             <button
               type="submit"
-              className="flex-1 py-3 px-6 rounded-xl font-bold text-xs bg-[#3525cd] text-white hover:opacity-90 transition-all shadow-lg shadow-[#3525cd]/20"
+              className="flex-1 py-3 px-6 rounded-xl font-bold text-xs bg-[#3525cd] text-white hover:bg-[#2b1cb8] transition-all shadow-lg shadow-[#3525cd]/20"
             >
-              Create Budget
+              {initialData ? 'Save Changes' : 'Create Budget'}
             </button>
           </div>
         </form>

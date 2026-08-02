@@ -7,6 +7,9 @@ interface SettingsViewProps {
   setUser: React.Dispatch<React.SetStateAction<UserProfile>>;
   onResetData: (mode: 'fresh' | 'demo') => void;
   transactionCount: number;
+  isLoggedIn?: boolean;
+  onOpenLogin?: () => void;
+  onLogout?: () => void;
 }
 
 const PRESET_AVATARS = [
@@ -25,6 +28,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   setUser,
   onResetData,
   transactionCount,
+  isLoggedIn = false,
+  onOpenLogin,
+  onLogout,
 }) => {
   const [budgetAlerts, setBudgetAlerts] = useState(true);
   const [emailDigest, setEmailDigest] = useState(true);
@@ -145,6 +151,45 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <span>{resetMessage}</span>
         </div>
       )}
+
+      {/* Account Login Status Card */}
+      <div className="glass-card rounded-3xl p-6 md:p-8 flex flex-col sm:flex-row items-center justify-between gap-4 border border-[#3525cd]/20">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#3525cd] text-white flex items-center justify-center font-bold text-xl shadow-md flex-shrink-0">
+            <span className="material-symbols-outlined text-2xl">manage_accounts</span>
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-[#0b1c30]">
+              {isLoggedIn ? `Logged in as ${user.name}` : 'Guest Account Mode'}
+            </h3>
+            <p className="text-xs text-[#464555] mt-0.5">
+              {isLoggedIn
+                ? `Account Email: ${user.email}`
+                : 'Log in to sync your budgets and transactions across devices.'}
+            </p>
+          </div>
+        </div>
+
+        {isLoggedIn ? (
+          <button
+            type="button"
+            onClick={onLogout}
+            className="px-5 py-2.5 rounded-xl border border-[#ba1a1a]/40 text-[#ba1a1a] hover:bg-red-50 font-bold text-xs transition-all flex items-center gap-2 flex-shrink-0"
+          >
+            <span className="material-symbols-outlined text-base">logout</span>
+            <span>Sign Out</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onOpenLogin}
+            className="px-5 py-2.5 rounded-xl bg-[#3525cd] text-white hover:bg-[#2b1cb8] font-bold text-xs transition-all flex items-center gap-2 shadow-md shadow-[#3525cd]/20 flex-shrink-0"
+          >
+            <span className="material-symbols-outlined text-base">login</span>
+            <span>Log In / Create Account</span>
+          </button>
+        )}
+      </div>
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Profile Picture & Personal Details */}

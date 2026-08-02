@@ -10,6 +10,7 @@ import { BudgetView } from './components/BudgetView';
 import { SettingsView } from './components/SettingsView';
 import { TransactionModal } from './components/TransactionModal';
 import { BudgetModal } from './components/BudgetModal';
+import { LoginModal } from './components/LoginModal';
 import { TabType, Transaction, BudgetCategoryItem, UserProfile } from './types';
 import {
   initialTransactions,
@@ -22,6 +23,18 @@ import { getCurrencyByCode } from './data/currencies';
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Authentication State
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('fintrack_is_logged_in');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
 
   // Persistent States from localStorage
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
@@ -56,6 +69,14 @@ export default function App() {
   // Sync state to localStorage
   useEffect(() => {
     try {
+      localStorage.setItem('fintrack_is_logged_in', JSON.stringify(isLoggedIn));
+    } catch (e) {
+      console.error('Failed to save auth state to localStorage', e);
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    try {
       localStorage.setItem('fintrack_transactions', JSON.stringify(transactions));
     } catch (e) {
       console.error('Failed to save transactions to localStorage', e);
@@ -84,8 +105,24 @@ export default function App() {
   const [modalDefaultType, setModalDefaultType] = useState<'income' | 'expense'>('expense');
 
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+  const [editingBudgetCategory, setEditingBudgetCategory] = useState<BudgetCategoryItem | null>(null);
 
-  // Handlers
+  // Auth Handlers
+  const handleLoginSuccess = (profileData: Partial<UserProfile>) => {
+    setUserProfile((prev) => ({
+      ...prev,
+      ...profileData,
+    }));
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to log out?')) {
+      setIsLoggedIn(false);
+    }
+  };
+
+  // Transaction Handlers
   const handleOpenAddTxModal = (type: 'income' | 'expense' = 'expense') => {
     setEditingTx(null);
     setModalDefaultType(type);
@@ -113,8 +150,26 @@ export default function App() {
     }
   };
 
-  const handleAddBudget = (newCat: BudgetCategoryItem) => {
-    setBudgetCategories((prev) => [...prev, newCat]);
+  // Budget Category Handlers
+  const handleOpenBudgetModal = (editingItem?: BudgetCategoryItem) => {
+    setEditingBudgetCategory(editingItem || null);
+    setIsBudgetModalOpen(true);
+  };
+
+  const handleSaveBudget = (categoryItem: BudgetCategoryItem) => {
+    if (editingBudgetCategory) {
+      setBudgetCategories((prev) =>
+        prev.map((b) => (b.id === editingBudgetCategory.id ? categoryItem : b))
+      );
+    } else {
+      setBudgetCategories((prev) => [...prev, categoryItem]);
+    }
+  };
+
+  const handleDeleteBudget = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this budget category?')) {
+      setBudgetCategories((prev) => prev.filter((b) => b.id !== id));
+    }
   };
 
   const handleResetData = (mode: 'fresh' | 'demo') => {
@@ -151,6 +206,9 @@ export default function App() {
         user={userProfile}
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
+        isLoggedIn={isLoggedIn}
+        onOpenLogin={() => setIsLoginModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Top Header Bar */}
@@ -161,11 +219,14 @@ export default function App() {
         onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         onOpenAddModal={() => {
           if (activeTab === 'budget') {
-            setIsBudgetModalOpen(true);
+            handleOpenBudgetModal();
           } else {
             handleOpenAddTxModal('expense');
           }
         }}
+        isLoggedIn={isLoggedIn}
+        onOpenLogin={() => setIsLoginModalOpen(true)}
+        user={userProfile}
       />
 
       {/* Main Canvas View */}
@@ -200,12 +261,15 @@ export default function App() {
               />
             )}
 
-            {activeTab === 'analytics' && <AnalyticsView currency={currentCurrency} />}
+            {activeTab === 'analytics' && (
+              <AnalyticsView transactions={transactions} currency={currentCurrency} />
+            )}
 
             {activeTab === 'budget' && (
               <BudgetView
                 categories={budgetCategories}
-                onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
+                onOpenBudgetModal={handleOpenBudgetModal}
+                onDeleteBudget={handleDeleteBudget}
                 currency={currentCurrency}
               />
             )}
@@ -216,6 +280,9 @@ export default function App() {
                 setUser={setUserProfile}
                 onResetData={handleResetData}
                 transactionCount={transactions.length}
+                isLoggedIn={isLoggedIn}
+                onOpenLogin={() => setIsLoginModalOpen(true)}
+                onLogout={handleLogout}
               />
             )}
           </motion.div>
@@ -238,8 +305,15 @@ export default function App() {
       <BudgetModal
         isOpen={isBudgetModalOpen}
         onClose={() => setIsBudgetModalOpen(false)}
-        onAddBudget={handleAddBudget}
+        onSaveBudget={handleSaveBudget}
+        initialData={editingBudgetCategory}
         currencySymbol={currencyObj.symbol}
+      />
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
       />
     </div>
   );
