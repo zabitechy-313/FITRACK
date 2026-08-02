@@ -35,43 +35,43 @@ export const Logo: React.FC<LogoProps> = ({
         className="flex-shrink-0"
       >
         <defs>
-          {/* Main F Outer Loop Gradient: Deep Navy -> Ocean Teal -> Vibrant Emerald Green */}
+          {/* Main F Outer Loop Gradient: Light Black/Charcoal -> Slate Blue -> Vibrant Royal Blue & Sky Blue */}
           <linearGradient id="fit_loop_grad" x1="40" y1="200" x2="180" y2="30" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#06182a" />
-            <stop offset="25%" stopColor="#033246" />
-            <stop offset="55%" stopColor="#007d7b" />
-            <stop offset="82%" stopColor="#00c885" />
-            <stop offset="100%" stopColor="#00f09e" />
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="25%" stopColor="#1e3a8a" />
+            <stop offset="55%" stopColor="#1d4ed8" />
+            <stop offset="82%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#38bdf8" />
           </linearGradient>
 
           {/* Middle Horizontal Bar Gradient */}
           <linearGradient id="fit_mid_bar_grad" x1="75" y1="85" x2="145" y2="85" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#00b87c" />
-            <stop offset="100%" stopColor="#00e599" />
+            <stop offset="0%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#60a5fa" />
           </linearGradient>
 
           {/* Bar 1 (Short Left Bar) */}
           <linearGradient id="fit_bar1" x1="0" y1="180" x2="0" y2="135" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#05263a" />
-            <stop offset="100%" stopColor="#005063" />
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#1d4ed8" />
           </linearGradient>
 
           {/* Bar 2 (Middle Bar) */}
           <linearGradient id="fit_bar2" x1="0" y1="180" x2="0" y2="115" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#005263" />
-            <stop offset="100%" stopColor="#009e7c" />
+            <stop offset="0%" stopColor="#1d4ed8" />
+            <stop offset="100%" stopColor="#2563eb" />
           </linearGradient>
 
           {/* Bar 3 (Tall Right Bar) */}
           <linearGradient id="fit_bar3" x1="0" y1="180" x2="0" y2="90" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#00a87a" />
-            <stop offset="100%" stopColor="#00e69b" />
+            <stop offset="0%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#38bdf8" />
           </linearGradient>
 
           {/* Brand Text 'Fin' Gradient */}
           <linearGradient id="fit_text_fin" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#00e699" />
-            <stop offset="100%" stopColor="#00b87c" />
+            <stop offset="0%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#38bdf8" />
           </linearGradient>
         </defs>
 
@@ -120,10 +120,10 @@ export const Logo: React.FC<LogoProps> = ({
       {showText && variant === 'full' && (
         <div className="flex items-center leading-none">
           <div className={`${currentSize.text} font-black tracking-tight flex items-center`}>
-            <span className="bg-gradient-to-r from-[#00e699] to-[#00b87c] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#2563eb] to-[#38bdf8] bg-clip-text text-transparent">
               Fin
             </span>
-            <span className="text-[#07172b]">
+            <span className="text-[#2b3648]">
               track
             </span>
           </div>
