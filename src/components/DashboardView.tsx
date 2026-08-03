@@ -248,7 +248,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="material-symbols-outlined text-2xl">account_balance_wallet</span>
           </div>
           <div className="flex-grow min-w-0">
-            <h4 className="font-bold text-[#0b1c30]">Welcome to FinTrack</h4>
+            <h4 className="font-bold text-[#0b1c30]">Welcome to Finzab</h4>
             <p className="text-xs text-[#464555] mt-1 leading-relaxed">
               Track your daily cash flow, manage category budget limits, and select from 50+ global currencies in Settings.
             </p>

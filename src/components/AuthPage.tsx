@@ -406,7 +406,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
         </div>
 
         <p className="text-center text-[11px] text-[#777587] mt-6">
-          Protected by FinTrack Security. Your data remains stored locally in your browser.
+          Protected by Finzab Security. Your data remains stored locally in your browser.
         </p>
       </div>
     </div>

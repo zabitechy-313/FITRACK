@@ -127,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="p-2.5 rounded-xl bg-[#e5eeff] border border-[#3525cd]/20 flex items-start gap-3">
                   <span className="material-symbols-outlined text-[#3525cd] text-lg mt-0.5">verified_user</span>
                   <div>
-                    <p className="text-xs font-bold text-[#0b1c30]">FinTrack System Ready</p>
+                    <p className="text-xs font-bold text-[#0b1c30]">Finzab System Ready</p>
                     <p className="text-[11px] text-[#464555]">Your local budget dashboard is fully synced.</p>
                     <span className="text-[10px] text-[#777587] mt-1 block">Just now</span>
                   </div>
