@@ -1,5 +1,5 @@
 import React from 'react';
-import logoImg from '../assets/images/finzab_logo_png_1785719613339.jpg';
+import logoImg from '../assets/images/finzab_logo_png_final_1785720052224.jpg';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
