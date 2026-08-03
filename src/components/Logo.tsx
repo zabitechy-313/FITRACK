@@ -15,102 +15,66 @@ export const Logo: React.FC<LogoProps> = ({
 }) => {
   // Sizing scale for icon & text
   const sizeMap = {
-    sm: { icon: 34, text: 'text-xl', tagline: 'text-[7.5px]', gap: 'gap-2' },
-    md: { icon: 48, text: 'text-2xl', tagline: 'text-[9px]', gap: 'gap-2.5' },
-    lg: { icon: 64, text: 'text-3xl', tagline: 'text-[11px]', gap: 'gap-3' },
-    xl: { icon: 92, text: 'text-4xl', tagline: 'text-[13px]', gap: 'gap-3.5' },
+    sm: { icon: 34, text: 'text-xl', gap: 'gap-2' },
+    md: { icon: 48, text: 'text-2xl', gap: 'gap-2.5' },
+    lg: { icon: 64, text: 'text-3xl', gap: 'gap-3' },
+    xl: { icon: 92, text: 'text-4xl', gap: 'gap-3.5' },
   };
 
   const currentSize = sizeMap[size];
 
   return (
     <div className={`inline-flex items-center ${currentSize.gap} ${className}`}>
-      {/* Precision SVG Icon matching exact logo design with transparent background */}
+      {/* Precision SVG Icon matching exact Finzab logo design */}
       <svg
         width={currentSize.icon}
         height={currentSize.icon}
-        viewBox="0 0 220 220"
+        viewBox="0 0 200 200"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="flex-shrink-0"
       >
         <defs>
-          {/* Main F Outer Loop Gradient: Light Black/Charcoal -> Slate Blue -> Vibrant Royal Blue & Sky Blue */}
-          <linearGradient id="fit_loop_grad" x1="40" y1="200" x2="180" y2="30" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#1e293b" />
-            <stop offset="25%" stopColor="#1e3a8a" />
-            <stop offset="55%" stopColor="#1d4ed8" />
-            <stop offset="82%" stopColor="#2563eb" />
-            <stop offset="100%" stopColor="#38bdf8" />
-          </linearGradient>
-
-          {/* Middle Horizontal Bar Gradient */}
-          <linearGradient id="fit_mid_bar_grad" x1="75" y1="85" x2="145" y2="85" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#2563eb" />
-            <stop offset="100%" stopColor="#60a5fa" />
-          </linearGradient>
-
-          {/* Bar 1 (Short Left Bar) */}
-          <linearGradient id="fit_bar1" x1="0" y1="180" x2="0" y2="135" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#1e293b" />
-            <stop offset="100%" stopColor="#1d4ed8" />
-          </linearGradient>
-
-          {/* Bar 2 (Middle Bar) */}
-          <linearGradient id="fit_bar2" x1="0" y1="180" x2="0" y2="115" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#1d4ed8" />
-            <stop offset="100%" stopColor="#2563eb" />
-          </linearGradient>
-
-          {/* Bar 3 (Tall Right Bar) */}
-          <linearGradient id="fit_bar3" x1="0" y1="180" x2="0" y2="90" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#2563eb" />
-            <stop offset="100%" stopColor="#38bdf8" />
-          </linearGradient>
-
-          {/* Brand Text 'Fin' Gradient */}
-          <linearGradient id="fit_text_fin" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#2563eb" />
-            <stop offset="100%" stopColor="#38bdf8" />
+          {/* Electric Blue -> Vibrant Cyan Gradient */}
+          <linearGradient id="finzab_cyan_grad" x1="40" y1="170" x2="160" y2="50" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#0052ff" />
+            <stop offset="50%" stopColor="#0088ff" />
+            <stop offset="100%" stopColor="#00d2ff" />
           </linearGradient>
         </defs>
 
-        {/* --- 1. Main Outer 'F' Frame --- */}
-        {/* Outer Top Loop & Vertical Stem */}
+        {/* --- 1. Top Black 'F' Wing --- */}
         <path
-          d="M 68 185 C 50 185 40 172 40 150 L 40 75 C 40 45 62 30 102 30 L 165 30 C 172 30 178 36 175 43 C 172 50 162 55 150 55 L 102 55 C 82 55 72 65 72 82 L 72 150 C 72 165 80 170 95 170 L 162 170 C 172 170 178 178 172 185 C 168 189 155 185 142 185 Z"
-          fill="url(#fit_loop_grad)"
+          d="M 58 32 H 132 C 140 32 144 38 140 46 C 136 52 128 54 120 54 H 82 V 70 H 118 C 126 70 130 76 126 84 C 122 90 114 92 106 92 H 82 V 104 C 82 108 76 112 70 112 H 58 C 54 112 50 108 50 102 V 40 C 50 35 54 32 58 32 Z"
+          fill="#141414"
         />
 
-        {/* Middle 'F' Crossbar */}
+        {/* --- 2. Bottom Blue/Cyan Financial Monogram 'Z' & Chart --- */}
+        {/* Short Left Bar */}
+        <rect x="50" y="118" width="18" height="38" rx="5" fill="url(#finzab_cyan_grad)" />
+
+        {/* Middle Bar */}
+        <rect x="76" y="102" width="18" height="54" rx="5" fill="url(#finzab_cyan_grad)" />
+
+        {/* Bottom Base Bar */}
         <path
-          d="M 72 85 C 72 78 80 75 92 75 L 140 75 C 150 75 155 82 150 88 C 145 94 135 95 125 95 L 92 95 C 80 95 72 90 72 85 Z"
-          fill="url(#fit_mid_bar_grad)"
+          d="M 76 158 H 138 C 146 158 150 163 146 169 C 142 174 134 176 126 176 H 66 C 58 176 50 170 50 162 C 50 158 54 158 60 158 Z"
+          fill="url(#finzab_cyan_grad)"
         />
 
-        {/* --- 2. Inside Bar Chart Columns --- */}
-        {/* Bar 1 (Short) */}
-        <rect x="90" y="138" width="20" height="32" rx="6" fill="url(#fit_bar1)" />
-
-        {/* Bar 2 (Medium) */}
-        <rect x="116" y="118" width="20" height="52" rx="6" fill="url(#fit_bar2)" />
-
-        {/* Bar 3 (Tall Right) */}
-        <rect x="142" y="92" width="20" height="78" rx="6" fill="url(#fit_bar3)" />
-
-        {/* --- 3. White Upward Trend Line & Arrow --- */}
+        {/* Dynamic Upward Slicing Trend Arrow */}
         <path
-          d="M 78 162 C 105 156 128 148 166 120"
-          stroke="#FFFFFF"
-          strokeWidth="5"
+          d="M 78 152 L 150 72"
+          stroke="url(#finzab_cyan_grad)"
+          strokeWidth="10"
           strokeLinecap="round"
         />
 
-        {/* White Arrowhead */}
+        {/* Arrowhead */}
         <path
-          d="M 152 120 L 168 118 L 164 134"
-          stroke="#FFFFFF"
-          strokeWidth="5"
+          d="M 130 70 L 154 68 L 152 92"
+          stroke="url(#finzab_cyan_grad)"
+          strokeWidth="10"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -119,12 +83,19 @@ export const Logo: React.FC<LogoProps> = ({
       {/* Brand Text Typography */}
       {showText && variant === 'full' && (
         <div className="flex items-center leading-none">
-          <div className={`${currentSize.text} font-black tracking-tight flex items-center`}>
-            <span className="bg-gradient-to-r from-[#2563eb] to-[#38bdf8] bg-clip-text text-transparent">
-              Fin
+          <div className={`${currentSize.text} font-black tracking-tight flex items-center font-sans`}>
+            {/* 'fin' in black with cyan dot on the 'i' */}
+            <span className="text-[#141414] flex items-center">
+              f
+              <span className="relative inline-flex flex-col items-center justify-center">
+                <span className="w-[4.5px] h-[4.5px] rounded-full bg-[#00a8ff] absolute -top-[2px]"></span>
+                <span className="mt-[2px]">i</span>
+              </span>
+              n
             </span>
-            <span className="text-[#2b3648]">
-              track
+            {/* 'zab' in cyan blue gradient */}
+            <span className="bg-gradient-to-r from-[#0066ff] via-[#0099ff] to-[#00d2ff] bg-clip-text text-transparent ml-[0.5px]">
+              zab
             </span>
           </div>
         </div>
